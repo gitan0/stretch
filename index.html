@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Stretch</title>
+<meta name="theme-color" content="#101412">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Stretch">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #101412;
+  --card: #1A211D;
+  --border: #2B3630;
+  --text: #F1F3EE;
+  --dim: #9FADA4;
+  --secondary: #D5DCD6;
+  --amber: #E8B04B;
+  --on-amber: #1A1405;
+  --heading: "Bricolage Grotesque", "DM Sans", system-ui, sans-serif;
+  --body: "DM Sans", system-ui, -apple-system, sans-serif;
+  --radius: 20px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.4;
+  min-height: 100vh;
+  min-height: 100dvh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; }
+[hidden] { display: none !important; }
+h1, h2, .num { font-family: var(--heading); font-weight: 700; letter-spacing: -0.02em; }
+
+.screen {
+  max-width: 430px;
+  margin: 0 auto;
+  padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 24px);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Today */
+.date { color: var(--dim); font-size: 14px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; }
+h1 { font-size: 40px; line-height: 1.05; margin: 4px 0 20px; }
+.seg {
+  display: flex; padding: 4px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--border); margin-bottom: 16px;
+}
+.seg button {
+  flex: 1; height: 48px; border-radius: 999px; font-weight: 500; color: var(--secondary);
+}
+.seg button[aria-pressed="true"] { background: var(--amber); color: var(--on-amber); font-weight: 700; }
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; margin-bottom: 12px; width: 100%; text-align: left;
+}
+.streak { display: flex; flex-direction: column; gap: 16px; }
+.streak-top { display: flex; align-items: baseline; gap: 10px; }
+.streak-top .num { font-size: 48px; line-height: 1; }
+.streak-top span:last-child { color: var(--dim); font-weight: 500; }
+.week { display: flex; justify-content: space-between; }
+.day {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--border); color: var(--dim); font-weight: 700; font-size: 14px;
+}
+.day.done { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+.day.today { border-color: var(--text); }
+.day.today:not(.done) { color: var(--text); }
+.routine { display: flex; align-items: center; gap: 16px; min-height: 96px; }
+.routine .text { flex: 1; min-width: 0; }
+.routine h2 { font-size: 22px; line-height: 1.15; }
+.routine .meta { color: var(--dim); font-size: 15px; margin-top: 4px; }
+.icon {
+  width: 48px; height: 48px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  border: 2px solid var(--border); color: var(--text);
+}
+.icon.done { background: var(--amber); border-color: var(--amber); color: var(--on-amber); }
+.icon svg { width: 22px; height: 22px; display: block; }
+.avoid-link {
+  display: block; text-align: center; color: var(--dim); font-weight: 500;
+  padding: 20px 0 8px; margin-top: auto; text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* Player */
+#player { padding-top: calc(env(safe-area-inset-top) + 12px); }
+.topbar { display: flex; justify-content: space-between; align-items: center; height: 44px; }
+.back { display: inline-flex; align-items: center; gap: 4px; text-decoration: none; color: var(--secondary); font-weight: 500; padding: 8px 8px 8px 0; }
+.back svg { width: 20px; height: 20px; }
+.counter { color: var(--dim); font-weight: 500; font-variant-numeric: tabular-nums; }
+.progress { height: 4px; border-radius: 2px; background: var(--border); margin: 8px 0 24px; overflow: hidden; }
+.progress div { height: 100%; width: 0; background: var(--amber); transition: width 0.3s ease; }
+.stage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 12px; }
+.routine-name { font-variant: small-caps; letter-spacing: 0.08em; color: var(--dim); font-weight: 500; font-size: 16px; }
+.move { font-size: 30px; line-height: 1.1; max-width: 22ch; }
+.pill {
+  display: inline-block; padding: 8px 16px; border-radius: 999px; font-size: 15px; font-weight: 500;
+  background: var(--card); border: 1px solid var(--border); color: var(--secondary);
+}
+.pill.set { background: transparent; }
+.pills { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.big { display: flex; flex-direction: column; align-items: center; margin: 12px 0; }
+.big .num { font-size: 128px; line-height: 1; font-variant-numeric: tabular-nums; }
+.big .label { color: var(--dim); font-weight: 500; font-size: 18px; margin-top: 4px; }
+.cue { color: var(--secondary); font-size: 17px; max-width: 30ch; }
+.equipment { color: var(--dim); font-size: 15px; max-width: 32ch; }
+.controls { display: flex; flex-direction: column; gap: 12px; padding-top: 24px; }
+.row { display: flex; gap: 12px; }
+.btn {
+  height: 56px; border-radius: 16px; font-weight: 500; font-size: 17px; flex: 1;
+  background: var(--card); border: 1px solid var(--border); color: var(--text);
+}
+.btn.primary { background: var(--amber); border-color: var(--amber); color: var(--on-amber); font-weight: 700; flex: 2; }
+.btn.done { height: 72px; font-size: 20px; border-radius: 20px; }
+.btn:active { opacity: 0.85; }
+
+/* Finish */
+.finish .stage { gap: 10px; }
+.check { width: 120px; height: 120px; border-radius: 50%; background: var(--amber); color: var(--on-amber); display: grid; place-items: center; margin-bottom: 16px; }
+.check svg { width: 64px; height: 64px; }
+.finish h1 { font-size: 48px; margin: 0; }
+.finish .sub { color: var(--secondary); font-size: 18px; }
+.finish .meta { color: var(--dim); }
+.finish .streak-line { margin-top: 16px; color: var(--text); font-weight: 500; }
+
+/* Avoid */
+.avoid-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.avoid-list li { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px 18px; }
+.avoid-list strong { display: block; font-size: 17px; }
+.avoid-list span { color: var(--dim); font-size: 15px; }
+.lead { color: var(--secondary); margin-bottom: 20px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+</head>
+<body>
+
+<main id="today" class="screen">
+  <p class="date" id="date"></p>
+  <h1>Today</h1>
+  <div class="seg" role="group" aria-label="Where are you training">
+    <button type="button" id="set-home" aria-pressed="false">At home</button>
+    <button type="button" id="set-gym" aria-pressed="false">At gym</button>
+  </div>
+  <section class="card streak" aria-label="Streak">
+    <div class="streak-top"><span class="num" id="streak-num">0</span><span id="streak-label">day streak</span></div>
+    <div class="week" id="week"></div>
+  </section>
+  <div id="routines"></div>
+  <a class="avoid-link" href="#avoid">Moves to avoid</a>
+</main>
+
+<main id="player" class="screen" hidden>
+  <div class="topbar">
+    <a class="back" href="#today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Today</a>
+    <span class="counter" id="counter"></span>
+  </div>
+  <div class="progress" aria-hidden="true"><div id="bar"></div></div>
+  <div class="stage" role="status" aria-live="polite" aria-atomic="true">
+    <p class="routine-name" id="p-routine"></p>
+    <h2 class="move" id="p-move"></h2>
+    <div class="pills" id="p-pills"></div>
+    <div class="big">
+      <span class="num" id="p-num"></span>
+      <span class="label" id="p-label"></span>
+    </div>
+    <p class="cue" id="p-cue"></p>
+    <p class="equipment" id="p-equipment"></p>
+  </div>
+  <div class="controls">
+    <button type="button" class="btn primary done" id="btn-done" hidden>Done</button>
+    <div class="row">
+      <button type="button" class="btn" id="btn-back">Back</button>
+      <button type="button" class="btn primary" id="btn-pause">Pause</button>
+      <button type="button" class="btn" id="btn-skip">Skip</button>
+    </div>
+  </div>
+</main>
+
+<main id="finish" class="screen finish" hidden>
+  <div class="stage">
+    <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg></div>
+    <h1>Done</h1>
+    <p class="sub" id="f-name"></p>
+    <p class="meta" id="f-meta"></p>
+    <p class="streak-line" id="f-streak"></p>
+  </div>
+  <div class="controls">
+    <button type="button" class="btn primary done" id="btn-home">Back to today</button>
+  </div>
+</main>
+
+<main id="avoid" class="screen" hidden>
+  <div class="topbar">
+    <a class="back" href="#today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>Today</a>
+  </div>
+  <h1>Moves to avoid</h1>
+  <p class="lead">Not in any routine here. Skip them elsewhere too.</p>
+  <ul class="avoid-list" id="avoid-list"></ul>
+</main>
+
+<script>
+/* ============================================================
+   DATA. Edit routines here.
+   Move fields: name, cue (optional), equipment (optional string
+   or { gym, home }), and one of reps or seconds.
+   Optional: sets (default 1), eachSide (true adds a left step,
+   a 5s switch screen and a right step for every set).
+   ============================================================ */
+const ROUTINES = [
+  {
+    id: 'wake', name: 'Wake-up', minutes: 5,
+    moves: [
+      { name: 'Cat-cow, small pain-free range', reps: 10, cue: 'Slow, small range, never to the end of the range.' },
+      { name: 'Knee-to-chest', seconds: 30, eachSide: true, cue: 'Other leg flat or bent.' },
+      { name: 'Pelvic tilts', reps: 12, cue: 'Gently flatten your lower back into the floor, then release.' }
+    ]
+  },
+  {
+    id: 'warmup', name: 'Pre-walk warm-up', minutes: 6,
+    moves: [
+      { name: 'Pelvic tilts', reps: 10 },
+      { name: 'Bird-dog', reps: 6, eachSide: true, cue: 'Hips level, slow, no trunk rotation.' },
+      { name: 'Glute bridge', reps: 10 },
+      { name: 'Leg swings front to back, holding a wall', reps: 10, eachSide: true, cue: "Small range, don't arch." },
+      { name: 'Bodyweight squat', reps: 10 },
+      { name: 'Calf raise', reps: 15 }
+    ]
+  },
+  {
+    id: 'stretch', name: 'Post-session stretches', minutes: 8,
+    moves: [
+      { name: 'Kneeling hip flexor stretch', seconds: 30, eachSide: true, cue: "Torso upright, don't arch your lower back." },
+      { name: 'Supine hamstring stretch with strap or towel', seconds: 30, eachSide: true, cue: 'Spine flat on the floor.' },
+      { name: 'Supine figure-4 glute stretch', seconds: 30, eachSide: true },
+      { name: 'Standing quad stretch', seconds: 30, eachSide: true, cue: 'Pelvis neutral.' },
+      { name: 'Wall calf stretch, straight knee', seconds: 30, eachSide: true },
+      { name: 'Wall calf stretch, bent knee', seconds: 30, eachSide: true }
+    ]
+  },
+  {
+    id: 'core', name: 'Daily core', minutes: 12,
+    moves: [
+      { name: 'McGill curl-up', reps: 8, sets: 3, cue: 'Hands under your lower back, lift only head and shoulders. Hold 2 to 3s at the top.' },
+      { name: 'Side plank', seconds: 30, sets: 2, eachSide: true, cue: 'Straight line from ankle to shoulder.' },
+      { name: 'Bird-dog', reps: 8, sets: 2, eachSide: true, cue: 'Hips level, slow, 2s pause at full extension.' },
+      { name: 'Pallof press', reps: 10, sets: 3, eachSide: true, cue: 'Press straight out and resist rotation.',
+        equipment: { gym: 'Cable at chest height', home: 'Resistance band anchored at chest height, or a towel looped around a door handle' } }
+    ]
+  },
+  {
+    id: 'gym', name: 'Gym strength', subtitle: 'Day A hip hinge', minutes: 30, setting: 'gym',
+    moves: [
+      { name: 'Leg press', reps: 10, sets: 3, cue: 'Feet high on the platform, lower to about 90 degrees at the knee, stop before your lower back leaves the pad.' },
+      { name: 'Single-leg RDL with a dumbbell', reps: 8, sets: 3, eachSide: true, cue: 'Hinge at the hip, flat back, stop at the hamstring stretch.' },
+      { name: 'Hip thrust', reps: 12, sets: 3, cue: 'Squeeze at the top without arching your lower back.' },
+      { name: 'Suitcase carry', seconds: 30, sets: 3, eachSide: true, cue: 'Walk 30 to 40 m.' }
+    ]
+  },
+  {
+    id: 'home', name: 'Home strength', subtitle: 'Mat and bodyweight', minutes: 20, setting: 'home',
+    moves: [
+      { name: 'Push-ups', reps: 12, sets: 3, cue: "Hips in line, don't let them sag." },
+      { name: 'Bodyweight squats', reps: 15, sets: 3 },
+      { name: 'Reverse lunges', reps: 10, sets: 3, eachSide: true },
+      { name: 'Glute bridge', reps: 15, sets: 3 },
+      { name: 'Calf raises', reps: 20, sets: 3 }
+    ]
+  }
+];
+
+const AVOID = [
+  ['Standing forward folds', 'Loaded spinal flexion'],
+  ['Seated spinal twists', 'Rotation at the weak segment'],
+  ['Pigeon pose', 'Deep flexion and rotation'],
+  ['Deep overhead reaching stretches', 'My near-miss trigger'],
+  ['Sit-ups', 'Repeated loaded flexion'],
+  ['Rowing machine', 'Flexion into extension every stroke'],
+  ['Running', 'Impact, until physio-cleared']
+];
+
+const SWITCH_SECONDS = 5;
+
+/* ============================================================
+   Storage. Every read and write is wrapped; falls back to memory.
+   ============================================================ */
+const store = {
+  mem: {},
+  get(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw !== null) return JSON.parse(raw);
+    } catch (e) {}
+    return key in this.mem ? this.mem[key] : fallback;
+  },
+  set(key, value) {
+    this.mem[key] = value;
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+  }
+};
+
+function dateKey(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + day;
+}
+function todayKey() { return dateKey(new Date()); }
+function getSetting() { const s = store.get('setting', 'gym'); return s === 'home' ? 'home' : 'gym'; }
+function getDone() { const d = store.get('done', {}); return d && typeof d === 'object' ? d : {}; }
+function isDoneToday(id) { return (getDone()[todayKey()] || []).includes(id); }
+function markDone(id) {
+  const done = getDone(), key = todayKey();
+  const list = done[key] || [];
+  if (!list.includes(id)) list.push(id);
+  done[key] = list;
+  store.set('done', done);
+}
+function streak() {
+  const done = getDone();
+  const d = new Date(); d.setHours(0, 0, 0, 0);
+  if (!(done[dateKey(d)] || []).length) d.setDate(d.getDate() - 1);
+  let n = 0;
+  while ((done[dateKey(d)] || []).length) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+
+/* ============================================================
+   Player logic. buildSteps turns a routine into a flat list.
+   ============================================================ */
+function buildSteps(routine, setting) {
+  const steps = [];
+  routine.moves.forEach(m => {
+    const sets = m.sets || 1;
+    const equipment = m.equipment && typeof m.equipment === 'object' ? m.equipment[setting] : m.equipment;
+    for (let set = 1; set <= sets; set++) {
+      const base = { kind: 'move', name: m.name, cue: m.cue, equipment, set, sets, seconds: m.seconds, reps: m.reps };
+      if (m.eachSide) {
+        steps.push(Object.assign({ side: 'Left side' }, base));
+        steps.push({ kind: 'switch', name: 'Switch sides', seconds: SWITCH_SECONDS, next: 'Right side', set, sets });
+        steps.push(Object.assign({ side: 'Right side' }, base));
+      } else {
+        steps.push(base);
+      }
+    }
+  });
+  const total = steps.filter(s => s.kind === 'move').length;
+  let n = 0;
+  steps.forEach(s => {
+    if (s.kind === 'move') n++;
+    s.n = s.kind === 'move' ? n : Math.min(n + 1, total);
+    s.total = total;
+  });
+  return steps;
+}
+
+let player = null; // { routine, steps, i, remainingMs, endAt, timer, paused }
+let finished = null;
+
+const $ = id => document.getElementById(id);
+
+function startRoutine(routine) {
+  initAudio();
+  player = { routine, steps: buildSteps(routine, getSetting()), i: 0, remainingMs: 0, endAt: 0, timer: null, paused: false };
+  finished = null;
+  location.hash = '#play';
+}
+
+function stopTimer() {
+  if (player && player.timer) { clearInterval(player.timer); player.timer = null; }
+}
+
+function stopPlayer() {
+  stopTimer();
+  player = null;
+  releaseWakeLock();
+}
+
+function currentStep() { return player ? player.steps[player.i] : null; }
+
+function renderStep() {
+  const step = currentStep();
+  if (!step) return;
+  stopTimer();
+  const timed = step.seconds != null;
+  $('p-routine').textContent = player.routine.name;
+  $('p-move').textContent = step.name;
+  $('counter').textContent = step.n + ' of ' + step.total;
+  $('bar').style.width = Math.round((player.i / player.steps.length) * 100) + '%';
+
+  const pills = [];
+  if (step.kind === 'switch') pills.push(['Next: ' + step.next, '']);
+  else if (step.side) pills.push([step.side, '']);
+  if (step.kind === 'move' && step.sets > 1) pills.push(['Set ' + step.set + ' of ' + step.sets, 'set']);
+  $('p-pills').innerHTML = pills.map(p => '<span class="pill ' + p[1] + '">' + p[0] + '</span>').join('');
+
+  $('p-cue').textContent = step.cue || '';
+  $('p-cue').hidden = !step.cue;
+  $('p-equipment').textContent = step.equipment || '';
+  $('p-equipment').hidden = !step.equipment;
+
+  if (timed) {
+    $('p-label').textContent = step.kind === 'switch' ? 'seconds' : '';
+    $('btn-done').hidden = true;
+    $('btn-pause').hidden = false;
+    player.remainingMs = step.seconds * 1000;
+    player.paused = false;
+    $('btn-pause').textContent = 'Pause';
+    runTimer();
+  } else {
+    $('p-num').textContent = step.reps;
+    $('p-label').textContent = 'reps';
+    $('btn-done').hidden = false;
+    $('btn-pause').hidden = true;
+  }
+}
+
+function showRemaining() {
+  const secs = Math.max(0, Math.ceil(player.remainingMs / 1000));
+  $('p-num').textContent = secs;
+}
+
+function runTimer() {
+  player.endAt = Date.now() + player.remainingMs;
+  showRemaining();
+  player.timer = setInterval(() => {
+    player.remainingMs = player.endAt - Date.now();
+    if (player.remainingMs <= 0) {
+      player.remainingMs = 0;
+      showRemaining();
+      stopTimer();
+      beep();
+      next();
+    } else {
+      showRemaining();
+    }
+  }, 200);
+}
+
+function togglePause() {
+  if (!player || currentStep().seconds == null) return;
+  if (player.paused) {
+    player.paused = false;
+    $('btn-pause').textContent = 'Pause';
+    runTimer();
+  } else {
+    player.paused = true;
+    player.remainingMs = Math.max(0, player.endAt - Date.now());
+    stopTimer();
+    showRemaining();
+    $('btn-pause').textContent = 'Resume';
+  }
+}
+
+function next() {
+  if (!player) return;
+  if (player.i + 1 >= player.steps.length) { completeRoutine(); return; }
+  player.i++;
+  renderStep();
+}
+
+function back() {
+  if (!player) return;
+  if (player.i > 0) player.i--;
+  renderStep();
+}
+
+function completeRoutine() {
+  const routine = player.routine;
+  const steps = player.steps;
+  stopPlayer();
+  markDone(routine.id);
+  finished = { routine, steps };
+  location.hash = '#done';
+}
+
+/* ============================================================
+   Audio and wake lock
+   ============================================================ */
+let audioCtx = null;
+function initAudio() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    audioCtx = audioCtx || new Ctx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+function beep() {
+  if (!audioCtx) return;
+  try {
+    const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.18);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+  } catch (e) {}
+}
+
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator && !wakeLock) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    }
+  } catch (e) { wakeLock = null; }
+}
+function releaseWakeLock() {
+  try { if (wakeLock) wakeLock.release(); } catch (e) {}
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && player) requestWakeLock();
+});
+
+/* ============================================================
+   Today screen
+   ============================================================ */
+const PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const TICK_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
+
+function renderToday() {
+  const setting = getSetting();
+  $('date').textContent = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' });
+  $('set-home').setAttribute('aria-pressed', String(setting === 'home'));
+  $('set-gym').setAttribute('aria-pressed', String(setting === 'gym'));
+
+  const n = streak();
+  $('streak-num').textContent = n;
+  
+  const done = getDone();
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const letters = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const tKey = dateKey(today);
+  $('week').innerHTML = letters.map((l, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i);
+    const k = dateKey(d);
+    const cls = ['day', (done[k] || []).length ? 'done' : '', k === tKey ? 'today' : ''].join(' ').trim();
+    const label = d.toLocaleDateString(undefined, { weekday: 'long' }) + ((done[k] || []).length ? ', done' : '') + (k === tKey ? ', today' : '');
+    return '<span class="' + cls + '" aria-label="' + label + '">' + l + '</span>';
+  }).join('');
+
+  const list = ROUTINES.filter(r => !r.setting || r.setting === setting);
+  $('routines').innerHTML = list.map(r => {
+    const done = isDoneToday(r.id);
+    const meta = r.moves.length + ' moves · ' + r.minutes + ' min' + (r.subtitle ? ' · ' + r.subtitle : '');
+    return '<button type="button" class="card routine" data-id="' + r.id + '"' + (done ? ' aria-label="' + r.name + ', done today, tap to repeat"' : '') + '>' +
+      '<div class="text"><h2>' + r.name + '</h2><div class="meta">' + meta + '</div></div>' +
+      '<span class="icon' + (done ? ' done' : '') + '" aria-hidden="true">' + (done ? TICK_SVG : PLAY_SVG) + '</span></button>';
+  }).join('');
+}
+
+function setSetting(v) {
+  store.set('setting', v);
+  renderToday();
+}
+
+/* ============================================================
+   Finish and avoid screens
+   ============================================================ */
+function renderFinish() {
+  if (!finished) return;
+  const r = finished.routine;
+  $('f-name').textContent = r.name;
+  $('f-meta').textContent = r.moves.length + ' moves · ' + r.minutes + ' min';
+  const n = streak();
+  $('f-streak').textContent = n + ' day streak';
+}
+
+function renderAvoid() {
+  $('avoid-list').innerHTML = AVOID.map(a => '<li><strong>' + a[0] + '</strong><span>' + a[1] + '</span></li>').join('');
+}
+
+/* ============================================================
+   Routing. Hash drives which screen is shown so Safari's back works.
+   ============================================================ */
+const SCREENS = ['today', 'player', 'finish', 'avoid'];
+function show(id) {
+  SCREENS.forEach(s => { $(s).hidden = s !== id; });
+  window.scrollTo(0, 0);
+}
+function route() {
+  const h = location.hash;
+  if (h === '#avoid') { stopPlayer(); show('avoid'); }
+  else if (h === '#play' && player) { show('player'); renderStep(); requestWakeLock(); }
+  else if (h === '#done' && finished) { stopPlayer(); renderFinish(); show('finish'); }
+  else {
+    stopPlayer();
+    if (h !== '' && h !== '#today') { history.replaceState(null, '', '#today'); }
+    renderToday(); show('today');
+  }
+}
+
+/* ============================================================
+   Wire up
+   ============================================================ */
+$('set-home').addEventListener('click', () => setSetting('home'));
+$('set-gym').addEventListener('click', () => setSetting('gym'));
+$('routines').addEventListener('click', e => {
+  const card = e.target.closest('[data-id]');
+  if (!card) return;
+  const r = ROUTINES.find(x => x.id === card.dataset.id);
+  if (r) startRoutine(r);
+});
+$('btn-done').addEventListener('click', () => { initAudio(); next(); });
+$('btn-skip').addEventListener('click', () => { initAudio(); next(); });
+$('btn-back').addEventListener('click', () => { initAudio(); back(); });
+$('btn-pause').addEventListener('click', () => { initAudio(); togglePause(); });
+$('btn-home').addEventListener('click', () => { location.hash = '#today'; });
+window.addEventListener('hashchange', route);
+
+renderAvoid();
+route();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+</script>
+</body>
+</html>
